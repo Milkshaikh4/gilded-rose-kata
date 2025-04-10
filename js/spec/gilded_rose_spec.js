@@ -106,6 +106,39 @@ describe("Gilded Rose", function () {
       expect(items[0].quality).toEqual(50);
       expect(items[0].sell_in).toEqual(10);
     });
+
+    it("Conjured Items, quality decreases by 2 before sell_in date", function () {
+      items = [new Item("Conjured sword of agony", 10, 20)];
+
+      for (let i = 0; i < 10; i++) {
+        update_quality();
+      }
+
+      expect(items[0].quality).toEqual(0);
+      expect(items[0].sell_in).toEqual(0);
+    });
+
+    it("Conjured Items, quality decreases by 4 after sell_in date", function () {
+      items = [new Item("Conjured sword of agony", 0, 40)];
+
+      for (let i = 0; i < 10; i++) {
+        update_quality();
+      }
+
+      expect(items[0].quality).toEqual(0);
+      expect(items[0].sell_in).toEqual(-10);
+    });
+
+    it("Conjured Items, quality never decreases past 0", function () {
+      items = [new Item("Conjured sword of agony", 0, 10)];
+
+      for (let i = 0; i < 10; i++) {
+        update_quality();
+      }
+
+      expect(items[0].quality).toEqual(0);
+      expect(items[0].sell_in).toEqual(-10);
+    });
   });
 
   it("Items quality decreases by 1 before sell_in date", function () {

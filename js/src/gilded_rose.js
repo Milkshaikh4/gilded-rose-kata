@@ -4,56 +4,112 @@ function Item(name, sell_in, quality) {
   this.quality = quality;
 }
 
+class ItemWrapper {
+  constructor(item) {
+    this.item = item;
+  }
+
+  update() {
+    this.decreaseSellIn();
+
+    if (this.item.quality <= 0) return;
+
+    if (this.item.sell_in < 0) {
+      this.decreaseQuality(2);
+      return;
+    }
+
+    this.decreaseQuality(1);
+  }
+
+  decreaseSellIn() {
+    this.item.sell_in -= 1;
+  }
+
+  decreaseQuality(amount = 1) {
+    this.item.quality = Math.max(0, this.item.quality - amount);
+  }
+}
+
+class AgedBrie extends ItemWrapper {
+  update() {
+    this.decreaseSellIn();
+
+    this.increaseQuality();
+
+    if (this.item.sell_in >= 0) return;
+
+    this.increaseQuality();
+  }
+
+  increaseQuality(amount = 1) {
+    this.item.quality = Math.min(50, this.item.quality + amount);
+  }
+}
+
+class BackstagePass extends ItemWrapper {
+  update() {
+    this.decreaseSellIn();
+
+    if (this.item.sell_in < 0) {
+      this.item.quality = 0;
+
+      return;
+    }
+
+    this.increaseQuality();
+
+    if (this.item.sell_in >= 10) return;
+
+    this.increaseQuality();
+
+    if (this.item.sell_in >= 5) return;
+
+    this.increaseQuality();
+  }
+
+  increaseQuality(amount = 1) {
+    this.item.quality = Math.min(50, this.item.quality + amount);
+  }
+}
+
+class Sulfuras extends ItemWrapper {
+  update() {}
+}
+
+class ConjuredItem extends ItemWrapper {
+  update() {
+    this.decreaseSellIn();
+    this.decreaseQuality(this.item.sell_in < 0 ? 4 : 2);
+  }
+}
+
 var items = [];
 
+const wrapItem = (item) => {
+  if (item.name.startsWith('Conjured')) {
+    return new ConjuredItem(item);
+  }
+
+  switch (item.name) {
+    case 'Sulfuras, Hand of Ragnaros':
+      return new Sulfuras(item);
+
+    case 'Aged Brie':
+      return new AgedBrie(item);
+    
+      case 'Backstage passes to a TAFKAL80ETC concert':
+        return new BackstagePass(item);
+
+    default:
+      return new ItemWrapper(item);
+  }
+}
+
 function update_quality() {
-  for (var i = 0; i < items.length; i++) {
-    if (items[i].name === "Sulfuras, Hand of Ragnaros") continue;
+  for (let i = 0; i < items.length; i++) {  
+    const wrapper = wrapItem(items[i])
 
-    items[i].sell_in = items[i].sell_in - 1;
-
-    if (items[i].name === "Aged Brie") {
-      if (items[i].quality < 50) {
-        items[i].quality = items[i].quality + 1;
-      }
-      if (items[i].quality < 50 && items[i].sell_in < 0) {
-        items[i].quality = items[i].quality + 1;
-      }
-
-      continue;
-    }
-
-    if (items[i].name === "Backstage passes to a TAFKAL80ETC concert") {
-      if (items[i].sell_in < 0) {
-        items[i].quality = items[i].quality - items[i].quality;
-
-        continue;
-      }
-
-      if (items[i].quality < 50) {
-        items[i].quality = items[i].quality + 1;
-      }
-      if (items[i].sell_in < 10) {
-        if (items[i].quality < 50) {
-          items[i].quality = items[i].quality + 1;
-        }
-      }
-      if (items[i].sell_in < 5) {
-        if (items[i].quality < 50) {
-          items[i].quality = items[i].quality + 1;
-        }
-      }
-
-      continue;
-    }
-
-    if (items[i].quality <= 0) continue;
-
-    if (items[i].sell_in < 0) {
-      items[i].quality = items[i].quality - 2;
-      continue;
-    }
-
-    items[i].quality = items[i].quality - 1;
+    wrapper.update()
   }
 }
